@@ -625,5 +625,5 @@ if st.session_state.generated_document:
 # Footer
 st.markdown("---")
 st.write("**How to use:** Upload/paste template → Upload/paste resume → Paste job description → Generate → Download → Copy to AI tool")
-st.write("**How it works:** The app takes your inputs and adds a specific prompt based on that to your template cover letter along with the job desc. You can then upload the generated word doc to GPT or Claude and get a finished cover letter without prompting")
-st.write("**Pro tip:** The generated document has everything the AI needs - just upload your resume and exported word doc into ChatGPT or Claude.")
+st.write("**How it works:** The app takes your inputs and adds a specific prompt based on that to your template cover letter. You can then upload the generated word doc to GPT or Claude and get a finished cover letter without any other uploads/prompting")
+st.write("**Pro tip:** The generated document has everything the AI needs - just upload yourexported word doc into ChatGPT or Claude.")
