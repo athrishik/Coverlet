@@ -1,11 +1,16 @@
-
 import streamlit as st
-import docx
-from docx.shared import Inches
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 import io
 import json
 from datetime import datetime
+
+# Try to import docx libraries
+try:
+    import docx
+    from docx.shared import Inches
+    from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+    DOCX_SUPPORT = True
+except ImportError:
+    DOCX_SUPPORT = False
 
 # Try to import PDF libraries
 try:
@@ -21,6 +26,12 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# Check for missing dependencies at startup
+if not DOCX_SUPPORT:
+    st.error("❌ **Missing Dependency**: python-docx is not installed. Please add it to your dependencies.")
+    st.info("💡 **Solution**: Add `python-docx>=0.8.11` to your config.toml dependencies or requirements.txt")
+    st.stop()
 
 # Custom CSS with clean dark theme
 st.markdown("""
@@ -310,6 +321,10 @@ st.markdown("""
 # Title
 st.markdown('<h1 class="main-header">⚡ CoverLet AI</h1>', unsafe_allow_html=True)
 
+# Show dependency status
+if not PDF_SUPPORT:
+    st.warning("📄 **PDF Support**: PyPDF2 not available. Upload .docx files only.")
+
 # Initialize session state
 if 'default_prompt' not in st.session_state:
     st.session_state.default_prompt = ""
@@ -318,6 +333,10 @@ if 'generated_document' not in st.session_state:
 
 def read_docx_file(uploaded_file):
     """Extract text from uploaded Word document"""
+    if not DOCX_SUPPORT:
+        st.error("Word document support not available")
+        return None
+        
     try:
         doc = docx.Document(io.BytesIO(uploaded_file.read()))
         text = []
@@ -373,6 +392,10 @@ def generate_default_prompt(language_option, custom_prompt, keep_one_page):
 
 def create_word_document(prompt_text, job_description, template_text, resume_text):
     """Create a Word document with prompt, job description, and template"""
+    if not DOCX_SUPPORT:
+        st.error("Cannot create Word document - python-docx not available")
+        return None
+        
     doc = docx.Document()
     
     # Add prompt section
@@ -431,23 +454,31 @@ col1, col2 = st.columns([1, 1])
 with col1:
     st.markdown('<div class="section-header">📝 Cover Letter Template</div>', unsafe_allow_html=True)
     
-    template_file = st.file_uploader(
-        "Upload Word document",
-        type=['docx'],
-        help="Upload your cover letter template",
-        key="template_file"
-    )
-    
-    template_text = ""
-    if template_file is not None:
-        template_text = read_docx_file(template_file)
-        if template_text:
-            st.success("✅ Template loaded")
-            with st.expander("Preview", expanded=False):
-                st.text_area("", template_text, height=100, disabled=True, key="template_preview")
+    if DOCX_SUPPORT:
+        template_file = st.file_uploader(
+            "Upload Word document",
+            type=['docx'],
+            help="Upload your cover letter template",
+            key="template_file"
+        )
+        
+        template_text = ""
+        if template_file is not None:
+            template_text = read_docx_file(template_file)
+            if template_text:
+                st.success("✅ Template loaded")
+                with st.expander("Preview", expanded=False):
+                    st.text_area("", template_text, height=100, disabled=True, key="template_preview")
+        else:
+            template_text = st.text_area(
+                "Or paste template here:",
+                placeholder="Paste your cover letter template...",
+                height=150,
+                key="template_input"
+            )
     else:
         template_text = st.text_area(
-            "Or paste template here:",
+            "Paste template here:",
             placeholder="Paste your cover letter template...",
             height=150,
             key="template_input"
@@ -473,35 +504,43 @@ with col1:
 with col2:
     st.markdown('<div class="section-header">📋 Resume Information</div>', unsafe_allow_html=True)
     
-    # Determine file types based on PDF support
-    file_types = ['docx']
-    help_text = "Upload your resume (.docx format)"
-    
-    if PDF_SUPPORT:
-        file_types.append('pdf')
+    # Determine file types based on available support
+    if DOCX_SUPPORT and PDF_SUPPORT:
+        file_types = ['docx', 'pdf']
         help_text = "Upload your resume (.docx or .pdf format)"
-    
-    resume_file = st.file_uploader(
-        "Upload Word document" + (" or PDF" if PDF_SUPPORT else ""),
-        type=file_types,
-        help=help_text,
-        key="resume_uploader"
-    )
+        uploader_label = "Upload Word document or PDF"
+    elif DOCX_SUPPORT:
+        file_types = ['docx']
+        help_text = "Upload your resume (.docx format)"
+        uploader_label = "Upload Word document"
+    else:
+        file_types = []
+        help_text = "File upload not available"
+        uploader_label = "File upload disabled"
     
     resume_text = ""
-    if resume_file is not None:
-        if PDF_SUPPORT and resume_file.type == "application/pdf":
-            resume_text = read_pdf_file(resume_file)
-        else:
-            resume_text = read_docx_file(resume_file)
+    if file_types:
+        resume_file = st.file_uploader(
+            uploader_label,
+            type=file_types,
+            help=help_text,
+            key="resume_uploader"
+        )
         
-        if resume_text:
-            st.success("✅ Resume loaded")
-            with st.expander("Preview", expanded=False):
-                st.text_area("", resume_text, height=100, disabled=True, key="resume_preview")
-    else:
+        if resume_file is not None:
+            if PDF_SUPPORT and resume_file.type == "application/pdf":
+                resume_text = read_pdf_file(resume_file)
+            else:
+                resume_text = read_docx_file(resume_file)
+            
+            if resume_text:
+                st.success("✅ Resume loaded")
+                with st.expander("Preview", expanded=False):
+                    st.text_area("", resume_text, height=100, disabled=True, key="resume_preview")
+    
+    if not resume_text:
         resume_text = st.text_area(
-            "Or paste resume info here:",
+            "Paste resume info here:",
             placeholder="Paste key resume information...",
             height=150,
             key="resume_input"
@@ -545,7 +584,9 @@ edited_prompt = st.text_area(
 st.markdown('<div class="section-header">🚀 Generate</div>', unsafe_allow_html=True)
 
 if st.button("📄 Generate Word Document", type="primary", use_container_width=True):
-    if not template_text:
+    if not DOCX_SUPPORT:
+        st.error("❌ Cannot generate Word documents - python-docx dependency missing")
+    elif not template_text:
         st.error("❌ Please provide a cover letter template")
     elif not resume_text:
         st.error("❌ Please provide resume information")
@@ -556,7 +597,8 @@ if st.button("📄 Generate Word Document", type="primary", use_container_width=
             st.session_state.generated_document = create_word_document(
                 edited_prompt, job_description, template_text, resume_text
             )
-        st.success("✅ Document generated!")
+        if st.session_state.generated_document:
+            st.success("✅ Document generated!")
 
 # Display download option
 if st.session_state.generated_document:
