@@ -87,59 +87,59 @@ st.markdown("""
         box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.3) !important;
     }
     
-    .stFileUploader > div {
-        background: #2d1b69 !important;
-        border: 1px dashed #7c3aed !important;
+    /* File uploader - more aggressive targeting */
+    .stFileUploader > div,
+    .stFileUploader > div > div,
+    .stFileUploader [data-testid="stFileUploaderDropzone"],
+    .stFileUploader [data-testid="stFileUploaderDropzoneInstructions"],
+    .stFileUploader section,
+    .stFileUploader section > div {
+        background: #161b22 !important;
+        background-color: #161b22 !important;
+        border: 1px dashed #30363d !important;
         border-radius: 6px !important;
         padding: 1rem !important;
     }
     
-    .stFileUploader > div:hover {
-        border-color: #8b5cf6 !important;
-        background: #3730a3 !important;
+    .stFileUploader:hover > div,
+    .stFileUploader:hover > div > div,
+    .stFileUploader:hover [data-testid="stFileUploaderDropzone"] {
+        border-color: #7c3aed !important;
+        background: #21262d !important;
+        background-color: #21262d !important;
     }
     
-    .stFileUploader div[data-testid="stFileUploaderDropzone"] {
-        background: #2d1b69 !important;
+    /* Force all file uploader elements to be dark */
+    .stFileUploader * {
+        background: #161b22 !important;
+        color: #8b949e !important;
     }
     
-    .stFileUploader div[data-testid="stFileUploaderDropzone"] * {
-        color: #c4b5fd !important;
-        background: transparent !important;
-    }
-    
-    .stFileUploader div[data-testid="stFileUploaderDropzoneInput"] {
-        background: #2d1b69 !important;
-    }
-    
-    .stFileUploader small {
-        color: #a78bfa !important;
-    }
-    
-    .stFileUploader p {
-        color: #c4b5fd !important;
-    }
-    
-    .stFileUploader span {
-        color: #c4b5fd !important;
+    .stFileUploader small,
+    .stFileUploader p,
+    .stFileUploader span,
+    .stFileUploader div {
+        color: #8b949e !important;
+        background: #161b22 !important;
     }
     
     .stFileUploader button {
-        background: #7c3aed !important;
+        background: #21262d !important;
         color: #ffffff !important;
-        border: none !important;
+        border: 1px solid #30363d !important;
         border-radius: 4px !important;
         padding: 0.3rem 0.8rem !important;
         font-size: 0.8rem !important;
     }
     
     .stFileUploader button:hover {
-        background: #8b5cf6 !important;
+        background: #30363d !important;
+        border-color: #7c3aed !important;
     }
     
     /* Override the nuclear white rule for file uploaders specifically */
     .stFileUploader .stApp * {
-        color: #c4b5fd !important;
+        color: #8b949e !important;
     }
     
     .stRadio > div {
@@ -383,7 +383,7 @@ def generate_default_prompt(language_option, custom_prompt, keep_one_page):
     length_instruction = " Keep it one page." if keep_one_page else ""
     
     # Additional instructions
-    additional_instructions = " Make sure to use accurate statements matching the information from the resume while highlighting the strong alignment to the role. The generated cover letter should capture the interest of the recruiter in my experience and capabilities. Do not make up stuff or hallucinate innacurate inforamtion. Keep it very accurate but powerful. Do not be overenthusiastic, but confident and somewhat persuasive. Please delete this and the job description while applying cover letter modifications."
+    additional_instructions = " Make sure to use accurate statements matching the information from the resume while highlighting the strong alignment to the role. The generated cover letter should capture the interest of the recruiter in my experience and capabilities. Do not make up stuff or hallucinate inaccurate information. Keep it very accurate but powerful. Do not be overenthusiastic, but confident and somewhat persuasive. Please delete this and the job description while applying cover letter modifications."
     
     # Construct prompt
     prompt = f"{base_prompt} {tone_instruction}{length_instruction}{additional_instructions}"
@@ -625,4 +625,5 @@ if st.session_state.generated_document:
 # Footer
 st.markdown("---")
 st.write("**How to use:** Upload/paste template → Upload/paste resume → Paste job description → Generate → Download → Copy to AI tool")
-st.write("**Pro tip:** The generated document has everything the AI needs - just copy/paste the entire content into ChatGPT or Claude.")
+st.write("**How it works:** The app takes your inputs and adds a specific prompt based on that to your template cover letter along with the job desc. You can then upload the generated word doc to GPT or Claude and get a finished cover letter without prompting")
+st.write("**Pro tip:** The generated document has everything the AI needs - just upload your resume and exported word doc into ChatGPT or Claude.")
